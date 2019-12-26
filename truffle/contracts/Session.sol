@@ -52,6 +52,13 @@ contract Session {
         require(msg.sender == creator);
         _;
     }
+
+    // modifier to check participants register or not
+    modifier validRegister(){
+        //require(msg.sender == MainContract.getAccountOfParticipant(msg.sender));
+        require(msg.sender == MainContract.getAccountOfParticipant(msg.sender));
+        _;
+    }
     // function for admin start Session
     function startSession(uint _timeOut) public onlyAdmin{
         require(state == State.CREATED || state == State.STOPPED);
@@ -74,12 +81,13 @@ contract Session {
     }
     //stop function to halt session a moment
     function stopSession() public onlyAdmin {
+        require(state == State.CREATED || state == State.ONGOING || state == State.CLOSED);
         stateBefore = state;
-        state = State.STOPPED;   
+        state = State.STOPPED;
         timeStop = now;
     }
     //function for participant price the product
-    function priceProduct(uint _amount) public validState(State.ONGOING){
+    function priceProduct(uint _amount) public validState(State.ONGOING) validRegister{
         if(timeOut > 0 && now >= timeOut){
             state = State.CLOSED;
         }else{
@@ -121,5 +129,10 @@ contract Session {
             MainContract.setDeviation(p,genDevi);
         }
         state = State.FINSHED;
+    }
+
+    function updateProduct(string _name,string _description) public onlyAdmin{
+        name = _name;
+        description = _description;
     }
 }

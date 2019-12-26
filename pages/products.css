@@ -17,3 +17,11 @@
 tr.active {
   background: lightskyblue !important;
 }
+
+/* #updateProduct{
+  background-color: red;
+} */
+
+#updateProduct{
+  display: none;
+}

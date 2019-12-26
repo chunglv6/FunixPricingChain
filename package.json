@@ -16,6 +16,8 @@
     "ethereumjs-tx": "^2.1.1",
     "hyperapp": "^1.2.10",
     "npm": "^6.13.4",
+    "truffle-contract": "^4.0.31",
+    "truffle-hdwallet-provider": "^1.0.17",
     "web3": "^1.2.4"
   },
   "devDependencies": {

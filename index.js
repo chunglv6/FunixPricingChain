@@ -36,6 +36,7 @@ else if (window.web3js) {
 }
 // If no injected web3 instance is detected, fall back to Ganache
 else {
+  // web3js = new Web3('https://ropsten.infura.io/v3/672d4ad6f9324fb8a15f2c062bf826f8');
   web3js = new Web3('ws://localhost:7545');
 }
 
@@ -57,8 +58,8 @@ var state = {
   email: ''.replace,
   newProduct: {},
   sessions: [],
-  currentProductIndex: 0,
-  data:0
+  currentProductIndex: 0
+  //data:0
 };
 
 // Functions of Main Contract
@@ -101,6 +102,7 @@ const actions = {
     };
   },
 
+
   inputNewProduct: ({ field, value }) => state => {
     let newProduct = state.newProduct || {};
     newProduct[field] = value;
@@ -135,21 +137,26 @@ const actions = {
       currentProductIndex: i
     };
   },
-  setData:_data =>state =>{
-    return {
-      data:_data
-    };
+  // setData:_data =>state =>{
+  //   return {
+  //     data:_data
+  //   };
 
-  },
-  sessionFn: (action) => async (state, {}) => {
+  // },
+  sessionFn: (data) => async (state, {}) => {
+    //console.log('action : '+data.action+', data : '+data.data);
+    if(!data.data){
+      data.data = 0;
+    }
+    //console.log('gan gia tri mac dinh : '+data.data);
     let sessionContract = state.sessions[state.currentProductIndex].contract;
     let stateOfSession;
-    switch (action) {
+    switch (data.action) {
       case 'start':
         //TODO: Handle event when User Start a new session
         stateOfSession = await sessionContract.methods.state().call();
         if(stateOfSession == 0){
-          await sessionContract.methods.startSession(state.data).send({from:state.account});
+          await sessionContract.methods.startSession(data.data).send({from:state.account});
         }else if(stateOfSession == 1){
           alert('session already started');
         }else if(stateOfSession == 4){
@@ -166,7 +173,11 @@ const actions = {
         }else if(stateOfSession == 4){
           alert('session already stopped');
         }else{
-          await sessionContract.methods.stopSession().send({from:state.account});
+          try{
+            await sessionContract.methods.stopSession().send({from:state.account});
+          }catch(e){
+            alert('Fail to stop session');
+          }
         }
 
         break;
@@ -175,7 +186,11 @@ const actions = {
         //The inputed Price is stored in `data`
         stateOfSession = await sessionContract.methods.state().call();
         if(stateOfSession == 1){
-          await sessionContract.methods.priceProduct(state.data).send({from: state.account});
+          try{
+            await sessionContract.methods.priceProduct(data.data).send({from: state.account});
+          }catch(e){
+            alert('account not yet register');
+          }
         }else if(stateOfSession == 0){
           alert('session not yet start');
         }else{
@@ -199,6 +214,11 @@ const actions = {
         }else{
           alert('Final price already set');
         }
+        break;
+
+      case 'update' :
+        await sessionContract.methods.updateProduct(data.name,data.description).send({from:state.account});
+        myfunction1();
         break;
     }
   },
@@ -267,6 +287,23 @@ const actions = {
     actions.setProfile(profile);
   },
 
+  edit:(_account) =>async (state,actions) =>{
+    if(_account == state.account){
+      myfunction2();
+    }else{
+      myfunction3();
+    }
+  },
+  updateParticipantInfo:() =>async (state,actions) => {
+    console.log(state.fullname+'  '+state.email);
+    state.fullname = state.profile.fullname;
+    state.email = state.profile.email;
+    await mainContract.methods.updateParticipantInfo(state.fullname,state.email,state.account).send({from:state.account});
+    let profile = await contractFunctions.participants(state.account)(); 
+    actions.setProfile(profile);
+    myfunction2();
+  },
+
   getSessions: () => async (state, actions) => {
     // TODO: Get the number of Sessions stored in Main contract
     let nSession = await contractFunctions.nSessions();
@@ -318,7 +355,7 @@ const actions = {
 
 const view = (
   state,
-  { getAccount, getParticipants, register, inputProfile, getSessions }
+  { getAccount, getParticipants, register, inputProfile, getSessions,updateParticipantInfo }
 ) => {
   return (
     <body
@@ -337,6 +374,7 @@ const view = (
           profile={state.profile}
           register={register}
           inputProfile={inputProfile}
+          updateParticipantInfo={updateParticipantInfo}
         ></Sidebar>
         <main class='main d-flex p-3'>
           <div class='h-100  w-100'>

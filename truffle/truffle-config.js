@@ -18,12 +18,12 @@
  *
  */
 
-// const HDWalletProvider = require('truffle-hdwallet-provider');
-// const infuraKey = "fj4jll3k.....";
+ const HDWalletProvider = require('truffle-hdwallet-provider');
+ //const infuraKey = "fj4jll3k.....";
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
-
+const mnemonic = 'island rough about throw attack olympic lamp also bottom board ostrich assist';
 module.exports = {
 
 
@@ -33,8 +33,20 @@ module.exports = {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 7545,            // Standard Ethereum port (default: none)
      network_id: "5777",       // Any network (default: none)
-    }
+    },
+
+    ropsten: {
+      provider: () => new HDWalletProvider(mnemonic, 'https://ropsten.infura.io/v3/672d4ad6f9324fb8a15f2c062bf826f8'),
+      network_id: 3,       // Ropsten's id
+      gas: 5500000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2,    // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
+    },
   },
+
+   // Useful for deploying to a public network.
+    // NB: It's important to wrap the provider as a function.
 
   // Set default mocha options here, use special reporters etc.
   mocha: {

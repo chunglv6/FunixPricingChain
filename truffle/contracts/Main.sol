@@ -26,12 +26,6 @@ contract Main {
     // constructor of main contract
     function Main() public{
         admin = msg.sender;
-        participants[admin].account = admin;
-        participants[admin].fullname = 'admin';
-        participants[admin].email = 'admin@funix.edu.vn';
-        participants[admin].nSessions = 0;
-        participants[admin].deviation = 0;
-        nParticipants = iParticipants.push(admin);
     }
     // Add a Session Contract address into Main Contract. Use to link Session with Main
     function addSession(address session) public {
@@ -61,5 +55,14 @@ contract Main {
     function setDeviation(address _address,uint _devi) public {
         participants[_address].deviation = _devi;
     }
+    function getAccountOfParticipant(address _address) public view returns(address){
+        return participants[_address].account;
+    }
 
+    function updateParticipantInfo(string _fullname,string _email,address _account) public{
+        require(msg.sender == _account);
+        participants[msg.sender].fullname = _fullname;
+        participants[msg.sender].email = _email;
+
+    }
 }
