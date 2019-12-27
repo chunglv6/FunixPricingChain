@@ -5,8 +5,8 @@ const Fragment = (props, children) => children;
 
 const Product = ({ product, newProduct, input, create, isAdmin, fn}) => {
   let price;
-  let description;
   let name;
+  let description;
   return (
     <>
       {product ? (
@@ -184,7 +184,7 @@ const Product = ({ product, newProduct, input, create, isAdmin, fn}) => {
                   // oninput={e => {
                   //   input({ field: 'name', value: e.target.value });
                   // }}
-                  oninput={e=>{name=e.target.value}}
+                  oninput={e=>(name = e.target.value)}
                 />
               </div>
             </div>
@@ -202,7 +202,7 @@ const Product = ({ product, newProduct, input, create, isAdmin, fn}) => {
                   // oninput={e => {
                   //   input({ field: 'description', value: e.target.value });
                   // }}
-                  oninput = {e=>{description=e.target.value}}
+                  oninput = {e=>(description = e.target.value)}
                 />
               </div>
             </div>
@@ -228,7 +228,7 @@ const Product = ({ product, newProduct, input, create, isAdmin, fn}) => {
           </div>
         </div>
         <div class='card-footer'>
-          <button type='submit' class='btn btn-primary' onclick={e=>fn({action:'update',name:name,description:description})}>
+          <button type='submit' class='btn btn-primary' onclick={e=>fn({action:'update',name:name,description:description,_name:product.name,_description:product.description})}>
             update
           </button>
         </div>

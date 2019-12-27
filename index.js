@@ -40,6 +40,9 @@ else {
   web3js = new Web3('ws://localhost:7545');
 }
 
+// window.ethereum.on('accountsChanged', function (accounts) {
+//   document.location.reload();
+// })
 
 import Main from './truffle/build/contracts/Main.json';
 import Session from './truffle/build/contracts/Session.json';
@@ -130,6 +133,7 @@ const actions = {
       })
       .send({ from: state.account });
     actions.getSessions();
+    // document.location.reload();
   },
 
   selectProduct: i => state => {
@@ -164,6 +168,7 @@ const actions = {
         }else{
           alert('session already closed');
         }
+        // document.location.reload();
         break;
       case 'stop':
         //TODO: Handle event when User Stop a session
@@ -179,7 +184,7 @@ const actions = {
             alert('Fail to stop session');
           }
         }
-
+        // document.location.reload();
         break;
       case 'pricing':
         //TODO: Handle event when User Pricing a product
@@ -196,7 +201,7 @@ const actions = {
         }else{
           alert('session already closed');
         }
-
+        // document.location.reload();
         break;
       case 'close':
         //TODO: Handle event when User Close a session
@@ -214,11 +219,27 @@ const actions = {
         }else{
           alert('Final price already set');
         }
+        // document.location.reload();
         break;
 
       case 'update' :
-        await sessionContract.methods.updateProduct(data.name,data.description).send({from:state.account});
-        myfunction1();
+        //console.log(' product : '+data._name);
+        console.log(data.name +"  "+data.description);
+        if(data.name == undefined){
+          data.name = data._name;
+        }
+        if(data.description == undefined){
+          data.description = data._description;
+        }
+        console.log(data.name +"  "+data.description);
+        if(data.name !== data._name || data.description !== data._description){
+          await sessionContract.methods.updateProduct(data.name,data.description).send({from:state.account});
+        }else{
+          alert('product\'information does not need to change');
+        }
+
+        myfunction();
+        // document.location.reload();
         break;
     }
   },
@@ -285,23 +306,31 @@ const actions = {
     // TODO: And get back the information of created participant
     let profile = await contractFunctions.participants(state.account)(); 
     actions.setProfile(profile);
+    // document.location.reload();
   },
 
   edit:(_account) =>async (state,actions) =>{
+    var check = false;
     if(_account == state.account){
-      myfunction2();
-    }else{
-      myfunction3();
+      check = true;
     }
+    myfunction2(check);
   },
   updateParticipantInfo:() =>async (state,actions) => {
-    console.log(state.fullname+'  '+state.email);
     state.fullname = state.profile.fullname;
     state.email = state.profile.email;
-    await mainContract.methods.updateParticipantInfo(state.fullname,state.email,state.account).send({from:state.account});
-    let profile = await contractFunctions.participants(state.account)(); 
-    actions.setProfile(profile);
-    myfunction2();
+    let _profile = await contractFunctions.participants(state.account)(); 
+    // console.log(_profile[1]+ ' '+_profile[2]);
+    // console.log(state.fullname + ' '+ state.email);
+    if(_profile[1] !== state.fullname || _profile[2] !== state.email){
+      await mainContract.methods.updateParticipantInfo(state.fullname,state.email,state.account).send({from:state.account});
+    }else{
+      alert('Participant\'information does not need to change');
+    }
+    _profile = await contractFunctions.participants(state.account)(); 
+    actions.setProfile(_profile);
+    myfunction2(false);
+    // document.location.reload();
   },
 
   getSessions: () => async (state, actions) => {
