@@ -33,6 +33,17 @@ contract('contract test case',async accounts =>{
             assert.equal(accounts[2],participant2[0],"Fail to register accounts[2]");
     
         });
+
+        it('Test case get deviation of participant', async ()=>{
+            await MainInstance.register('name3','name3@funix.edu.vn',{from:accounts[3]});
+            let deviationOfAccount3 = await MainInstance.getDeviation(accounts[3]);
+            assert.equal(deviationOfAccount3,0,'Fail to get deviation');
+        });
+
+        it('Test case get account of participant', async ()=>{
+            let par3 = await MainInstance.participants(accounts[3]);
+            assert.equal(par3[0],accounts[3],'Fail to get account of participant');
+        });
     
 
  
@@ -71,19 +82,19 @@ contract('contract test case',async accounts =>{
         assert.equal(await SessionInstance.state(),1,'Session not ONGOING');
         await SessionInstance.priceProduct(60,{from:accounts[1]});
         await SessionInstance.priceProduct(80,{from:accounts[2]});
-        assert.equal(await SessionInstance.pricings(accounts[1]),60,'Fail to pricing from accounts[3]');
+        assert.equal(await SessionInstance.pricings(accounts[1]),60,'Fail to pricing from accounts[1]');
         assert.equal(await SessionInstance.pricings(accounts[2]),80,'Fail to pricing from accounts[2]');
         let par1 = await MainInstance.participants(accounts[1]);
         let par2 = await MainInstance.participants(accounts[2]);
-        assert.equal(par1[3],1,'Fail to pricing form accounts[1]');
-        assert.equal(par2[3],1,'Fail to pricing form accounts[1]');
+        assert.equal(par1[3],1,'Fail to pricing from accounts[1]');
+        assert.equal(par2[3],1,'Fail to pricing from accounts[1]');
 
     });
 
     it('Only registered participant can price', async ()=>{
-        assert.equal(await MainInstance.getAccountOfParticipant(accounts[3]),'0x0000000000000000000000000000000000000000','account already registered');
+        assert.equal(await MainInstance.getAccountOfParticipant(accounts[4]),'0x0000000000000000000000000000000000000000','account already registered');
         try{
-            await SessionInstance.priceProduct(60,{from:accounts[3]});
+            await SessionInstance.priceProduct(60,{from:accounts[4]});
             assert(false);
         }catch(e){
             assert(true);
@@ -132,6 +143,10 @@ contract('contract test case',async accounts =>{
         assert.equal(proposedPrice,7000,'fail to calculate final price');
         assert.equal(await SessionInstance.state(),3,'Fail to calculate final price');
 
+    });
+
+    it('Test case set deviation of participant',async ()=>{
+        assert.notEqual(await MainInstance.getDeviation(accounts[1]),0,'Fail to set deviation');
     });
 
     it('Can not set final price with defferent state CLOSED',async ()=>{

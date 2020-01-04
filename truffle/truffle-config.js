@@ -16,6 +16,8 @@
  * public/private key pairs. If you're publishing your code to GitHub make sure you load this
  * phrase from a file you've .gitignored so it doesn't accidentally become public.
  *
+ * $ truffle test --network <network-name>
+ * $ truffle migrate --network <network-name>
  */
 
  const HDWalletProvider = require('truffle-hdwallet-provider');

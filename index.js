@@ -152,7 +152,7 @@ const actions = {
     if(!data.data){
       data.data = 0;
     }
-    //console.log('gan gia tri mac dinh : '+data.data);
+    console.log('gia tri timeout : '+data.data);
     let sessionContract = state.sessions[state.currentProductIndex].contract;
     let stateOfSession;
     switch (data.action) {
@@ -169,6 +169,7 @@ const actions = {
           alert('session already closed');
         }
         // document.location.reload();
+        console.log(await sessionContract.methods.timeOut().call());
         break;
       case 'stop':
         //TODO: Handle event when User Stop a session
@@ -190,6 +191,7 @@ const actions = {
         //TODO: Handle event when User Pricing a product
         //The inputed Price is stored in `data`
         stateOfSession = await sessionContract.methods.state().call();
+       
         if(stateOfSession == 1){
           try{
             await sessionContract.methods.priceProduct(data.data).send({from: state.account});
