@@ -36,13 +36,13 @@ else if (window.web3js) {
 }
 // If no injected web3 instance is detected, fall back to Ganache
 else {
-  // web3js = new Web3('https://ropsten.infura.io/v3/672d4ad6f9324fb8a15f2c062bf826f8');
-  web3js = new Web3('ws://localhost:7545');
+  web3js = new Web3('https://ropsten.infura.io/v3/672d4ad6f9324fb8a15f2c062bf826f8');
+  //web3js = new Web3('ws://localhost:7545');
 }
 
-// window.ethereum.on('accountsChanged', function (accounts) {
-//   document.location.reload();
-// })
+window.ethereum.on('accountsChanged', function (accounts) {
+  document.location.reload();
+})
 
 import Main from './truffle/build/contracts/Main.json';
 import Session from './truffle/build/contracts/Session.json';
@@ -62,16 +62,12 @@ var state = {
   newProduct: {},
   sessions: [],
   currentProductIndex: 0
-  //data:0
 };
 
 // Functions of Main Contract
 const contractFunctions = {
   getAccounts: promisify(web3js.eth.getAccounts),
   getBalance: promisify(web3js.eth.getBalance),
-
-  // TODO: The methods' name is for referenced. Update to match with your Main contract
-
   // Get Admin address of Main contract
   getAdmin: mainContract.methods.admin().call,
 
@@ -96,6 +92,7 @@ const contractFunctions = {
 };
 
 const actions = {
+
   inputProfile: ({ field, value }) => state => {
     let profile = state.profile || {};
     profile[field] = value;
@@ -104,7 +101,7 @@ const actions = {
       profile
     };
   },
-
+ 
 
   inputNewProduct: ({ field, value }) => state => {
     let newProduct = state.newProduct || {};
@@ -122,9 +119,6 @@ const actions = {
     await contract
       .deploy({
         arguments: [
-          // TODO: Argurment when Deploy the Session Contract
-          // It must be matched with Session.sol Contract Constructor
-          // Hint: You can get data from `state`
           config.mainContract,
           state.newProduct.name,
           state.newProduct.description,
@@ -133,7 +127,6 @@ const actions = {
       })
       .send({ from: state.account });
     actions.getSessions();
-    // document.location.reload();
   },
 
   selectProduct: i => state => {
@@ -141,23 +134,15 @@ const actions = {
       currentProductIndex: i
     };
   },
-  // setData:_data =>state =>{
-  //   return {
-  //     data:_data
-  //   };
 
-  // },
-  sessionFn: (data) => async (state, {}) => {
-    //console.log('action : '+data.action+', data : '+data.data);
+  sessionFn: (data) => async (state, actions) => {
     if(!data.data){
       data.data = 0;
     }
-    console.log('gia tri timeout : '+data.data);
     let sessionContract = state.sessions[state.currentProductIndex].contract;
     let stateOfSession;
     switch (data.action) {
       case 'start':
-        //TODO: Handle event when User Start a new session
         stateOfSession = await sessionContract.methods.state().call();
         if(stateOfSession == 0){
           await sessionContract.methods.startSession(data.data).send({from:state.account});
@@ -168,11 +153,13 @@ const actions = {
         }else{
           alert('session already closed');
         }
-        // document.location.reload();
-        console.log(await sessionContract.methods.timeOut().call());
+        // if(data.data > 0){
+        //   actions.setExpireTimeOut({_timeout:data.data,_session:sessionContract});
+        // }
+        
+        actions.getSessions();
         break;
       case 'stop':
-        //TODO: Handle event when User Stop a session
         stateOfSession = await sessionContract.methods.state().call();
         if(stateOfSession == 3){
           alert('can not stop session finshed');
@@ -185,10 +172,9 @@ const actions = {
             alert('Fail to stop session');
           }
         }
-        // document.location.reload();
+        actions.getSessions();
         break;
       case 'pricing':
-        //TODO: Handle event when User Pricing a product
         //The inputed Price is stored in `data`
         stateOfSession = await sessionContract.methods.state().call();
        
@@ -203,10 +189,12 @@ const actions = {
         }else{
           alert('session already closed');
         }
-        // document.location.reload();
+        let profile = await contractFunctions.participants(state.account)(); 
+        actions.setProfile(profile);
+        actions.getSessions();
+        actions.getParticipants();
         break;
       case 'close':
-        //TODO: Handle event when User Close a session
         //The inputed Price is stored in `data`
         stateOfSession = await sessionContract.methods.state().call();
         if(stateOfSession == 2){
@@ -221,11 +209,11 @@ const actions = {
         }else{
           alert('Final price already set');
         }
-        // document.location.reload();
+        actions.getSessions();
+        actions.getParticipants();
         break;
 
       case 'update' :
-        //console.log(' product : '+data._name);
         console.log(data.name +"  "+data.description);
         if(data.name == undefined){
           data.name = data._name;
@@ -241,7 +229,7 @@ const actions = {
         }
 
         myfunction();
-        // document.location.reload();
+        actions.getSessions();
         break;
     }
   },
@@ -273,13 +261,21 @@ const actions = {
 
   getParticipants: () => async (state, actions) => {
     let participants = [];
-
-    // TODO: Load all participants from Main contract.
-    // One participant should contain { address, fullname, email, nSession and deviation }
     let nParticipants = await contractFunctions.nParticipants();
     for(let index = 0; index < nParticipants; index++){
       let _address = await contractFunctions.iParticipants(index)();
       let par = await contractFunctions.participants(_address)();
+      // let count = 0;
+      // for(let i = 0;i < nSession;i++){
+      //   // Get session address
+      //   let session = await contractFunctions.sessions(i)();
+      //   // Load the session contract on network
+      //   let contract = new web3js.eth.Contract(Session.abi, session);
+      //   if(await contract.methods.pricings(_address) > 0){
+      //     count++;
+      //   }
+      // }
+      // par[3] = count;
       participants.push(par);
     }
     actions.setParticipants(participants);
@@ -300,15 +296,13 @@ const actions = {
   },
 
   register: () => async (state, actions) => {
-    // TODO: Register new participant
     state.fullname = state.profile.fullname;
     state.email = state.profile.email;
     await mainContract.methods.register(state.fullname,state.email).send({from:state.account});
     //const profile = {};
-    // TODO: And get back the information of created participant
     let profile = await contractFunctions.participants(state.account)(); 
     actions.setProfile(profile);
-    // document.location.reload();
+    actions.getParticipants();
   },
 
   edit:(_account) =>async (state,actions) =>{
@@ -322,8 +316,6 @@ const actions = {
     state.fullname = state.profile.fullname;
     state.email = state.profile.email;
     let _profile = await contractFunctions.participants(state.account)(); 
-    // console.log(_profile[1]+ ' '+_profile[2]);
-    // console.log(state.fullname + ' '+ state.email);
     if(_profile[1] !== state.fullname || _profile[2] !== state.email){
       await mainContract.methods.updateParticipantInfo(state.fullname,state.email,state.account).send({from:state.account});
     }else{
@@ -332,15 +324,12 @@ const actions = {
     _profile = await contractFunctions.participants(state.account)(); 
     actions.setProfile(_profile);
     myfunction2(false);
-    // document.location.reload();
+    actions.getParticipants();
   },
 
   getSessions: () => async (state, actions) => {
-    // TODO: Get the number of Sessions stored in Main contract
     let nSession = await contractFunctions.nSessions();
     let sessions = [];
-
-    // TODO: And loop through all sessions to get information
 
     for (let index = 0; index < nSession; index++) {
       // Get session address
@@ -349,11 +338,6 @@ const actions = {
       let contract = new web3js.eth.Contract(Session.abi, session);
 
       let id = session;
-
-      // TODO: Load information of session.
-      // Hint: - Call methods of Session contract to reveal all nessesary information
-      //       - Use `await` to wait the response of contract
-
       let name = await contract.methods.name().call() ; // TODO
       let description = await contract.methods.description().call(); // TODO
       let price = await contract.methods.proposedPrice().call(); // TODO
@@ -382,11 +366,21 @@ const actions = {
       sessions: sessions
     };
   }
+
+  // setExpireTimeOut:(obj)=> async (state,actions)=>{
+  //   console.log(obj._timeout);
+  //   console.log(obj._session);
+  //   setTimeout(async()=>{
+  //    let creator = await obj._session.methods.creator().call();
+  //     await obj._session.methods.setStateTimeOut().send({from:creator});
+  //     console.log(await obj._session.methods.state().call());
+  //   },obj._timeout*1000);
+  // }
 };
 
 const view = (
   state,
-  { getAccount, getParticipants, register, inputProfile, getSessions,updateParticipantInfo }
+  { getAccount, getParticipants, register, inputProfile, getSessions,updateParticipantInfo}
 ) => {
   return (
     <body
