@@ -1,5 +1,5 @@
 pragma solidity ^0.4.17;
-//import "./Session.sol";
+import "./Session.sol";
 contract Main {
 
     // Structure to hold details of Bidder
@@ -12,8 +12,6 @@ contract Main {
     }
 
     address public admin;
-
-    // TODO: Variables
     // nSession contain number of session init
     uint public nSessions;
     // nParticipant contain number of participant
@@ -45,15 +43,27 @@ contract Main {
     // function to increment number of Session that participant joined
 
     function increNumSessionOfParticipant(address _address) public{
-        participants[_address].nSessions += 1;
+        uint count = 0;
+        for(uint i = 0; i < nSessions; i++){
+            address  _session = sessions[i];
+            Session  sessionInstance = Session(_session);
+            if(sessionInstance.pricings(_address) > 0){
+                count++;
+            }
+        }
+        participants[_address].nSessions = count;
+        //participants[_address].nSessions += 1;
     }
     //function to get deviation of participant
     function getDeviation(address _address) public view returns(uint){
         return participants[_address].deviation;
     }
     //function to update deviation of participant
-    function setDeviation(address _address,uint _devi) public {
-        participants[_address].deviation = _devi;
+    function setDeviation(address _address,address _session) public {
+        Session sessionInstance = Session(_session);
+        require(uint8(sessionInstance.state()) == 2);
+        require(sessionInstance.proposedPrice() > 0);
+        participants[_address].deviation = sessionInstance.deviations(_address);
     }
     function getAccountOfParticipant(address _address) public view returns(address){
         return participants[_address].account;

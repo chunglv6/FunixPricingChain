@@ -2,9 +2,12 @@ pragma solidity ^0.4.17;
 
 // // Interface of Main contract to call from Session contract
 // contract Main {
-//     function addSession(address session) public {}
-//     function increNumSessionOfParticipant(address _address) public {}
-//     function getDeviation(address _address) public {}
+//     address public admin;
+//     function addSession(address session) public ;
+//     function increNumSessionOfParticipant(address _address) public ;
+//     function getDeviation(address _address) public view returns(uint) ;
+//     function setDeviation(address _address,uint _devi) public;
+//     function getAccountOfParticipant(address _address) public view returns(address);
 // }
 import "./Main.sol";
 
@@ -13,8 +16,6 @@ contract Session {
     address public mainContract;
     // Variable to hold Main Contract instance to call functions from Main
     Main MainContract;
-
-    // TODO: Variables
     address public creator;
      enum State {CREATED,ONGOING,CLOSED,FINSHED,STOPPED}
     State public state;
@@ -26,6 +27,7 @@ contract Session {
     string public image;
     address[] public iParticipants;
     mapping(address => uint) public pricings;
+    mapping(address => uint) public deviations;
     uint public proposedPrice;
     uint public nParticipants;
     function Session(address _mainContract,string _name,string _description,string _image) public{
@@ -88,6 +90,7 @@ contract Session {
     }
     //function for participant price the product
     function priceProduct(uint _amount) public validState(State.ONGOING) validRegister{
+        require(_amount > 0);
         if(timeOut > 0 && now >= timeOut){
             state = State.CLOSED;
         }else{
@@ -125,8 +128,8 @@ contract Session {
                 deviationNew = (100*pricings[p] - proposedPrice)*100;
             }
             uint genDevi = (MainContract.getDeviation(p)*nParticipants*proposedPrice + 100*deviationNew);
-            genDevi = genDevi/((nParticipants + 1)*proposedPrice);
-            MainContract.setDeviation(p,genDevi);
+            deviations[p] = genDevi/((nParticipants + 1)*proposedPrice);
+            MainContract.setDeviation(p,address(this));
         }
         state = State.FINSHED;
     }
@@ -135,4 +138,5 @@ contract Session {
         name = _name;
         description = _description;
     }
+
 }
